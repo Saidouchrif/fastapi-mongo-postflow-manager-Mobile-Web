@@ -20,8 +20,4 @@ app.include_router(posts_router)
 
 @app.get("/")
 def home():
-    return {"message": "✅ API PostFlow Manager is running successfully!"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    return {"message": " API PostFlow Manager is running successfully!"}
