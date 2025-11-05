@@ -163,8 +163,8 @@ sequenceDiagram
 
 1. **Cloner le repository**
 ```bash
-git clone https://github.com/votre-username/fastapi-mongo-postflow-manager-Mobile-Web-.git
-cd fastapi-mongo-postflow-manager-Mobile-Web-
+git clone https://github.com/Saidouchrif/fastapi-mongo-postflow-manager-Mobile-Web.git
+cd fastapi-mongo-postflow-manager-Mobile-Web
 ```
 
 2. **Configuration des variables d'environnement (optionnel)**
