@@ -1,107 +1,107 @@
-version: "3.9"
-
 services:
-  # Backend API Service
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: postflow-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: postflow_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - postflow-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mongo Express - Database Admin UI
+  mongo-express:
+    image: mongo-express:latest
+    container_name: postflow-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - postflow-network
+
+  # Backend API (FastAPI)
   api:
     build:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: postflow-api
-    env_file:
-      - ./Backend/.env            
-    environment:
-      - MONGO_URL=${MONGO_URL:-mongodb://root:example@mongo:27017/?authSource=admin}
-      - MONGO_DB=${MONGO_DB:-postflow_db}
-      - API_HOST=0.0.0.0
-      - API_PORT=5050
-    ports:
-      - "${API_PORT:-5050}:5050"
-    depends_on:
-      mongo:
-        condition: service_healthy
     restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URL: mongodb://root:example@mongodb:27017/?authSource=admin
+      MONGO_DB: postflow_db
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - postflow-network
+    volumes:
+      - ./Backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Frontend Web Service
+  # Frontend Web (HTML/CSS/JS)
   frontend-web:
     build:
       context: ./Frontend-Web
       dockerfile: Dockerfile
     container_name: postflow-frontend-web
-    environment:
-      - API_URL=http://api:5050/api
+    restart: unless-stopped
     ports:
-      - "${WEB_PORT:-3000}:80"
+      - "3000:80"
     depends_on:
       - api
-    restart: unless-stopped
     networks:
       - postflow-network
 
-  # Frontend Mobile Service (Flutter Web)
+  # Frontend Mobile (Flutter Web)
   frontend-mobile:
     build:
       context: ./frontend_mobile
       dockerfile: Dockerfile
     container_name: postflow-frontend-mobile
-    environment:
-      - API_URL=http://api:5050/api
+    restart: unless-stopped
     ports:
-      - "${MOBILE_PORT:-3001}:80"
+      - "3001:80"
     depends_on:
       - api
-    restart: unless-stopped
     networks:
       - postflow-network
 
-  # MongoDB Database Service
-  mongo:
-    image: mongo:7
-    container_name: postflow-mongo
-    command: ["--bind_ip_all"]
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-root}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-example}
-    ports:
-      - "${MONGO_PORT:-27017}:27017"   
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "mongodb://root:example@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-    networks:
-      - postflow-network
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
 
-  # MongoDB Admin Interface
-  mongo-express:
-    image: mongo-express:1
-    container_name: postflow-mongo-express
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USERNAME:-root}
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD:-example}
-      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/?authSource=admin
-      - ME_CONFIG_BASICAUTH=false   
-    ports:
-      - "${MONGO_EXPRESS_PORT:-8081}:8081"  
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - postflow-network
-
-# Docker Networks
 networks:
   postflow-network:
     driver: bridge
-    name: postflow-network
 
-# Docker Volumes
-volumes:
-  mongo-data:
-    driver: local
-    name: postflow-mongo-data

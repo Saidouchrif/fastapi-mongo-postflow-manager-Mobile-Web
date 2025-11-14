@@ -1,10 +1,11 @@
 import 'package:retrofit/retrofit.dart';
 import 'package:dio/dio.dart';
+import '../../config/constants.dart';
 import '../models/post.dart';
 
 part 'rest_client.g.dart';
 
-@RestApi(baseUrl: "http://127.0.0.1:5000/api/")
+@RestApi(baseUrl: AppConstants.apiUrl)
 abstract class RestClient {
   factory RestClient(Dio dio, {String? baseUrl}) = _RestClient;
 

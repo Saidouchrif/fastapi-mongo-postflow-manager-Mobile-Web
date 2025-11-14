@@ -1,7 +1,10 @@
 import { fmt, clip, escapeHtml, toggle, toast } from "./helpers.js";
 
 // === Config ===
-const API_BASE = "http://localhost:5000/api";  // API FastAPI sur le port 5000
+// Use window.location.origin for relative API calls, or fallback to localhost:5000
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? "http://localhost:5000/api"
+  : `${window.location.protocol}//${window.location.hostname}:5000/api`;
 const API = `${API_BASE}/posts`;
 
 // === Elements ===

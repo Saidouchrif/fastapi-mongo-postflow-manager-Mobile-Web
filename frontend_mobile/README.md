@@ -55,6 +55,8 @@ flutter build ios --release
 ```
 lib/
 ├── main.dart                 # Point d'entrée avec thème Material 3
+├── config/                   # Configuration
+│   └── constants.dart        # Constantes (URL API, timeouts, etc.)
 ├── ui/                      # Interfaces utilisateur
 │   ├── posts_page.dart      # Liste des posts avec stats
 │   ├── add_post_page.dart   # Création de posts
@@ -81,11 +83,18 @@ lib/
 
 ## 🔧 Configuration
 
-### Variables d'environnement
-Modifier l'URL de l'API dans `lib/ui/posts_page.dart` :
+### Configuration de l'API Backend
+L'URL de l'API est centralisée dans `lib/config/constants.dart` :
 ```dart
-api = RestClient(dio, baseUrl: 'http://votre-api:5050/api/');
+class AppConstants {
+  static const String apiBaseUrl = 'http://10.29.128.200:5000';
+  static const String apiBasePath = '/api';
+  static const String apiUrl = '$apiBaseUrl$apiBasePath/';
+  // ...
+}
 ```
+
+Pour changer l'URL du backend, modifiez uniquement `apiBaseUrl` dans ce fichier.
 
 ### Personnalisation du thème
 Le thème est configuré dans `lib/main.dart` :
@@ -149,7 +158,7 @@ flutter drive --target=test_driver/app.dart
 - [Documentation Flutter](https://docs.flutter.dev/)
 - [Material Design 3](https://m3.material.io/)
 - [Dart Language](https://dart.dev/)
-- [API PostFlow](http://localhost:5050/docs)
+- [API PostFlow](http://10.29.128.200:5000/docs)
 
 ## 🤝 Contribution
 

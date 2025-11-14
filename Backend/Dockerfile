@@ -1,26 +1,25 @@
-# ==== Build minimal Python image ====
-FROM python:3.12-slim
-
-# System deps (optional but useful)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy requirements and install
-COPY requirements.txt ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app source
-COPY app ./app
+# Copy application code
+COPY . .
 
-# Env (can be overridden by compose/.env)
-ENV MONGO_URL="mongodb://mongo:27017" \
-    MONGO_DB="postflow_db" \
-    PYTHONUNBUFFERED=1
+# Expose port
+EXPOSE 5000
 
-EXPOSE 5050
+# Run uvicorn with reload for development
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
 
-# Run uvicorn on 0.0.0.0:5050
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5050"]

@@ -1,36 +1,31 @@
-# Flutter Web Build Dockerfile
-# This Dockerfile builds the Flutter app for web deployment
+# Build stage
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
-# Use the official Flutter image as base
-FROM ghcr.io/cirruslabs/flutter:3.24.3 AS build
-
-# Set working directory
 WORKDIR /app
 
-# Copy pubspec files first for dependency caching
-COPY pubspec.yaml pubspec.lock ./
+# Copy pubspec file
+COPY pubspec.yaml ./
 
-# Get Flutter dependencies
+# Get dependencies (this will generate pubspec.lock if it doesn't exist)
 RUN flutter pub get
 
-# Copy the rest of the application
+# Copy source code
 COPY . .
 
-# Enable web support and build for web
-RUN flutter config --enable-web
-RUN flutter build web --release --web-renderer html
+# Build Flutter web app
+RUN flutter build web --release
 
-# Use nginx to serve the built Flutter web app
+# Production stage
 FROM nginx:alpine
 
-# Copy the built web app to nginx html directory
+# Copy built files from build stage
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Copy custom nginx configuration
+# Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Expose port
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
+

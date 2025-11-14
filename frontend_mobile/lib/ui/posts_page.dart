@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import '../config/constants.dart';
 import '../data/network/rest_client.dart';
 import '../data/models/post.dart';
 import 'add_post_page.dart';
@@ -21,10 +22,10 @@ class _PostsPageState extends State<PostsPage> {
     super.initState();
     final dio = Dio(BaseOptions(
       contentType: 'application/json',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: AppConstants.connectTimeout,
+      receiveTimeout: AppConstants.receiveTimeout,
     ));
-    api = RestClient(dio, baseUrl: 'http://127.0.0.1:5000/api/');
+    api = RestClient(dio, baseUrl: AppConstants.apiUrl);
     future = api.getPosts();
   }
 
